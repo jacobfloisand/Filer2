@@ -28,9 +28,12 @@ namespace FilerService2._0
 
         public FileContents GetFullFile(string Name, string Class, string Cookie)
         {
-            //Select Archive from Cookies Natural Join UserIDs Natural Join Classes Natural Join Files where Cookie equals @Cookie && Class equals @Class && Name equals @Name
-            //Line above is not correct. See below for a start.
-            //SELECT Files.DataID FROM Files WHERE DataID IN (SELECT Classes.DataID FROM Classes WHERE Classes.Class = 'Biology') AND Name = '1210 articles_s18.pdf';
+            /*
+            SELECT Files.Archive FROM Files JOIN Classes ON Files.DataID = Classes.DataID
+            WHERE Files.Name = '1210 articles_s18.pdf' AND Classes.Class = 'Biology' INTERSECT
+            SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID
+            WHERE Cookies.Cookie = 'tHiSIsaCoOKie3857957';
+            */
             throw new NotImplementedException();
         }
     }
