@@ -25,9 +25,29 @@ namespace FilerService2._0
             FilerDB2Connection.Open();
         }
 
-        public void AddFile(ResourceDataVerbose data)
+        public void AddResource(ResourceDataVerbose data)
         {
-            throw new NotImplementedException();
+            if(data.Date == null || data.Date.Equals("") || data.Class == null || data.Class.Equals("") || data.IsLink == null ||
+                data.IsLink.Equals("") || data.Override == null || data.Override.Equals("") || data.Cookie == null || data.Cookie.Equals(""))
+            {
+                SetStatus(HttpStatusCode.Forbidden);
+                return;
+            }
+            //Check to see if we have the necesary fields for a link if it's a link or a file if it's a file.
+            if((data.IsLink.Equals("true") && VerifyIsLink(data)) || data.IsLink.Equals("false") && VerifyIsFile(data))
+            {
+                //If execution reaches this section, all the required fields are present
+            }
+            //This else statement gets executed if necessary fields are missing(such as link name if it's a link, or file contents if it's a file).
+            else
+            {
+                SetStatus(HttpStatusCode.Forbidden);
+                return;
+            }
+
+            //Extract unit, type, and comments into variables(use information about the data stored in the variables to build the queries).
+            //Use function calls for queries instead of if statements to make things more readable.
+            //Dynamically build queries(should be fairly straight forward).
         }
 
         public void Delete(DeleteData Nickname)
@@ -80,6 +100,30 @@ namespace FilerService2._0
         private static void SetStatus(HttpStatusCode status)
         {
             WebOperationContext.Current.OutgoingResponse.StatusCode = status;
+        }
+
+        private static bool VerifyIsLink(ResourceDataVerbose data)
+        {
+            if(data.Link == null || data.Link.Equals("") || data.LinkName == null || data.LinkName.Equals(""))
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
+        private static bool VerifyIsFile(ResourceDataVerbose data)
+        {
+            if(data.File == null || data.File.Equals("") || data.FileName == null || data.FileName.Equals(""))
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
     }
 }

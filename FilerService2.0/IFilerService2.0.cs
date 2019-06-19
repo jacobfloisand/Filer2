@@ -13,7 +13,7 @@ namespace FilerService2._0
     {
 
         [WebInvoke(Method = "POST", UriTemplate = "/save")]
-        void AddFile(ResourceDataVerbose data);
+        void AddResource(ResourceDataVerbose data);
 
         [WebInvoke(Method = "POST", UriTemplate = "/delete")]
         void Delete(DeleteData Nickname);
