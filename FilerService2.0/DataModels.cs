@@ -14,13 +14,9 @@ namespace FilerService2._0
     public class ResourceDataVerbose
     {
         [DataMember(EmitDefaultValue = false)]
-        public string File { get; set; }
+        public string Contents { get; set; }
         [DataMember(EmitDefaultValue = false)]
-        public string Link { get; set; }
-        [DataMember(EmitDefaultValue = false)]
-        public string FileName { get; set; }
-        [DataMember(EmitDefaultValue = false)]
-        public string LinkName { get; set; }
+        public string Name { get; set; }
         [DataMember(EmitDefaultValue = false)]
         public string Date { get; set; }
         [DataMember(EmitDefaultValue = false)]

@@ -27,27 +27,116 @@ namespace FilerService2._0
 
         public void AddResource(ResourceDataVerbose data)
         {
-            if(data.Date == null || data.Date.Equals("") || data.Class == null || data.Class.Equals("") || data.IsLink == null ||
-                data.IsLink.Equals("") || data.Override == null || data.Override.Equals("") || data.Cookie == null || data.Cookie.Equals(""))
-            {
-                SetStatus(HttpStatusCode.Forbidden);
-                return;
-            }
-            //Check to see if we have the necesary fields for a link if it's a link or a file if it's a file.
-            if((data.IsLink.Equals("true") && VerifyIsLink(data)) || data.IsLink.Equals("false") && VerifyIsFile(data))
-            {
-                //If execution reaches this section, all the required fields are present
-            }
-            //This else statement gets executed if necessary fields are missing(such as link name if it's a link, or file contents if it's a file).
-            else
+            if(IsNullOrEmpty(data.Date) || IsNullOrEmpty(data.Class) || IsNullOrEmpty(data.IsLink) || IsNullOrEmpty(data.Override) ||
+                IsNullOrEmpty(data.Cookie) || IsNullOrEmpty(data.Contents) || IsNullOrEmpty(data.Name))
             {
                 SetStatus(HttpStatusCode.Forbidden);
                 return;
             }
 
-            //Extract unit, type, and comments into variables(use information about the data stored in the variables to build the queries).
-            //Use function calls for queries instead of if statements to make things more readable.
-            //Dynamically build queries(should be fairly straight forward).
+            //Check to make sure the Class,Name,Cookie combo is not already taken. If it is we either delete the current resource or return conflict to client.
+            if(NameAndClassAndCookieAlreadyExists(data.Name, data.Class, data.Cookie))
+            {
+                if (data.Override.Equals("true"))
+                {
+                    //This item that matches this one in the db must be delete to make room for the new one.
+                    Delete(new DeleteData
+                    {
+                        Name = data.Name,
+                        Class = data.Class,
+                        Cookie = data.Cookie
+                    });
+                }
+                else
+                {
+                    SetStatus(HttpStatusCode.Conflict);
+                    return;
+                }
+            }
+
+            int DataID = 0;
+            //Add the file or link to db.
+            if (data.IsLink.Equals("true"))
+            {
+                DataID = AddLink(data);
+            }
+            if (data.IsLink.Equals("false"))
+            {
+                DataID = AddFile(data);
+            }
+
+            //Add any necessary additional data to db.
+            //The second query involves updating all of the info associated with this file(class, unit, type, comments, cookie).
+            string Query = "INSERT INTO Classes VALUES(@DataID, @Class) " +
+                            "INSERT INTO UserIDs VALUES(@DataID, (SELECT UserID FROM Cookies WHERE Cookie = @Cookie)) ";
+            if (!IsNullOrEmpty(data.Unit))
+            {
+                Query += "INSERT INTO Units VALUES(@DataID, @Unit) ";
+            }
+            if (!IsNullOrEmpty(data.Type))
+            {
+                Query += "INSERT INTO Types VALUES (@DataID, @Type)";
+            }
+            if (!IsNullOrEmpty(data.Comments))
+            {
+                Query += "INSERT INTO Comments VALUES(@DataID, @Comments)";
+            }
+            using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+            {
+                com.Parameters.AddWithValue("@Class", data.Class);
+                com.Parameters.AddWithValue("@Cookie", data.Cookie);
+                com.Parameters.AddWithValue("@DataID", DataID);
+                if (!IsNullOrEmpty(data.Unit))
+                {
+                    com.Parameters.AddWithValue("@Unit", data.Unit);
+                }
+                if (!IsNullOrEmpty(data.Type))
+                {
+                    com.Parameters.AddWithValue("@Type", data.Type);
+                }
+                if (!IsNullOrEmpty(data.Comments))
+                {
+                    com.Parameters.AddWithValue("@Comments", data.Comments);
+                }
+                com.ExecuteNonQuery(); //This query inserts the file or link information into the database.
+            }
+        }
+
+        public int AddFile(ResourceDataVerbose data)
+        {
+            int dataID = 0; //This will hold the dataID for this specific file.
+            string Query = "INSERT INTO Files (Archive, Name, Date) VALUES (@File, @FileName, @Date)";
+            using(SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+            {
+                com.Parameters.AddWithValue("@File", data.Contents);
+                com.Parameters.AddWithValue("@FileName", data.Name);
+                com.Parameters.AddWithValue("@Data", data.Date);
+                using(SqlDataReader reader = com.ExecuteReader())
+                {
+                    reader.Read();
+                    dataID = reader.GetInt32(0);
+                }
+            }
+            return dataID;
+
+        }
+
+        public int AddLink(ResourceDataVerbose data)
+        {
+            int dataID = 0; //This will hold the dataID for this specific file.
+            string Query = "INSERT INTO Links (Link, Name, Date) VALUES (@Link, @LinkName, @Date)";
+            using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+            {
+                com.Parameters.AddWithValue("@Link", data.Contents);
+                com.Parameters.AddWithValue("@LinkName", data.Name);
+                com.Parameters.AddWithValue("@Data", data.Date);
+                using (SqlDataReader reader = com.ExecuteReader())
+                {
+                    reader.Read();
+                    dataID = reader.GetInt32(0);
+                }
+            }
+            return dataID;
         }
 
         public void Delete(DeleteData Nickname)
@@ -102,27 +191,33 @@ namespace FilerService2._0
             WebOperationContext.Current.OutgoingResponse.StatusCode = status;
         }
 
-        private static bool VerifyIsLink(ResourceDataVerbose data)
+        private static bool IsNullOrEmpty(string data)
         {
-            if(data.Link == null || data.Link.Equals("") || data.LinkName == null || data.LinkName.Equals(""))
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+            return data == null || data.Equals("");
         }
 
-        private static bool VerifyIsFile(ResourceDataVerbose data)
+        private static bool NameAndClassAndCookieAlreadyExists(string Name, string Class, string Cookie)
         {
-            if(data.File == null || data.File.Equals("") || data.FileName == null || data.FileName.Equals(""))
+            string Query = "(SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID WHERE Name = @Name AND Class = @Class INTERSECT " +
+                            "SELECT DataID FROM Cookies JOIN UserIDs ON Cookies.UserID = UserIDs.UserID WHERE Cookie = @Cookie) UNION " +
+                            "(SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID WHERE Name = @Name' AND Class = @Class INTERSECT " +
+                            "SELECT DataID FROM Cookies JOIN UserIDs ON Cookies.UserID = UserIDs.UserID WHERE Cookie = @Cookie)";
+            using(SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
             {
-                return false;
-            }
-            else
-            {
-                return true;
+                com.Parameters.AddWithValue("@Name", Name);
+                com.Parameters.AddWithValue("@Class", Class);
+                com.Parameters.AddWithValue("@Cookie", Cookie);
+                using (SqlDataReader reader = com.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
             }
         }
     }
