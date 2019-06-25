@@ -47,6 +47,8 @@ namespace FilerService2._0
         public string Class { get; set; }
         [DataMember(EmitDefaultValue = false)]
         public string Cookie { get; set; }
+        [DataMember(EmitDefaultValue = false)]
+        public string IsLink { get; set; }
     }
 
     /// <summary>

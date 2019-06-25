@@ -44,7 +44,8 @@ namespace FilerService2._0
                     {
                         Name = data.Name,
                         Class = data.Class,
-                        Cookie = data.Cookie
+                        Cookie = data.Cookie,
+                        IsLink = data.IsLink
                     });
                 }
                 else
@@ -110,7 +111,7 @@ namespace FilerService2._0
             {
                 com.Parameters.AddWithValue("@File", data.Contents);
                 com.Parameters.AddWithValue("@FileName", data.Name);
-                com.Parameters.AddWithValue("@Data", data.Date);
+                com.Parameters.AddWithValue("@Date", data.Date);
                 using(SqlDataReader reader = com.ExecuteReader())
                 {
                     reader.Read();
@@ -129,7 +130,7 @@ namespace FilerService2._0
             {
                 com.Parameters.AddWithValue("@Link", data.Contents);
                 com.Parameters.AddWithValue("@LinkName", data.Name);
-                com.Parameters.AddWithValue("@Data", data.Date);
+                com.Parameters.AddWithValue("@Date", data.Date);
                 using (SqlDataReader reader = com.ExecuteReader())
                 {
                     reader.Read();
@@ -139,9 +140,69 @@ namespace FilerService2._0
             return dataID;
         }
 
-        public void Delete(DeleteData Nickname)
+        public void Delete(DeleteData data)
         {
-            throw new NotImplementedException();
+            if(IsNullOrEmpty(data.Name) || IsNullOrEmpty(data.Class) || IsNullOrEmpty(data.Cookie) || IsNullOrEmpty(data.IsLink))
+            {
+                SetStatus(HttpStatusCode.Forbidden);
+                return;
+            }
+            string Query = GetDeleteQuery(data);
+            using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+            {
+                com.Parameters.AddWithValue("@Name", data.Name);
+                com.Parameters.AddWithValue("@Class", data.Class);
+                com.Parameters.AddWithValue("@Cookie", data.Cookie);
+                using (SqlDataReader reader = com.ExecuteReader())
+                {
+                    reader.Read();
+                    if(reader.RecordsAffected > 0)
+                    {
+                        SetStatus(HttpStatusCode.OK);
+                        return;
+                    }
+                    else
+                    {
+                        SetStatus(HttpStatusCode.Conflict);
+                        return;
+                    }
+                }
+            }
+            
+        }
+
+        private static string GetDeleteQuery(DeleteData data)
+        {
+            string Query = "";
+            if (data.IsLink.Equals("true"))
+            {
+                Query = "Declare @DID INT; " +
+            "SET @DID = (SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
+                                            "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                            "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                            "WHERE Cookies.Cookie = @Cookie); " +
+            "DELETE FROM Classes WHERE Classes.DataID = @DID; " +
+            "DELETE FROM Units WHERE Units.DataID = @DID; " +
+            "DELETE FROM Types WHERE Types.DataID = @DID; " +
+            "DELETE FROM Comments WHERE Comments.dataID = @DID; " +
+            "DELETE FROM UserIDs WHERE UserIDs.DataID = @DID; " +
+            "DELETE FROM Links WHERE Links.DataID = @DID; ";
+            }
+            else
+            {
+                Query = "Declare @DID INT; " +
+            "SET @DID = (SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
+                                            "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                            "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                            "WHERE Cookies.Cookie = @Cookie); " +
+            "DELETE FROM Classes WHERE Classes.DataID = @DID; " +
+            "DELETE FROM Units WHERE Units.DataID = @DID; " +
+            "DELETE FROM Types WHERE Types.DataID = @DID; " +
+            "DELETE FROM Comments WHERE Comments.dataID = @DID; " +
+            "DELETE FROM UserIDs WHERE UserIDs.DataID = @DID; " +
+            "DELETE FROM Files WHERE Files.DataID = @DID; ";
+            }
+            return Query;
         }
 
         public ResourceDataVerbose[] DoSearch(string Class, string Unit, string Type)
@@ -156,10 +217,11 @@ namespace FilerService2._0
                 SetStatus(HttpStatusCode.Forbidden);
                 return null;
             }
-            string GetFileContentsQuery = "SELECT Files.Archive FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
-                                          "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
-                                          "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
-                                          "WHERE Cookies.Cookie = @Cookie;";
+            string GetFileContentsQuery = "SELECT Files.Archive FROM Files WHERE DataID = " +
+                                            "(SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
+                                            "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                            "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                            "WHERE Cookies.Cookie = @Cookie)";
 
             using (SqlCommand command = new SqlCommand(GetFileContentsQuery, FilerDB2Connection))
             {
@@ -200,7 +262,7 @@ namespace FilerService2._0
         {
             string Query = "(SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID WHERE Name = @Name AND Class = @Class INTERSECT " +
                             "SELECT DataID FROM Cookies JOIN UserIDs ON Cookies.UserID = UserIDs.UserID WHERE Cookie = @Cookie) UNION " +
-                            "(SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID WHERE Name = @Name' AND Class = @Class INTERSECT " +
+                            "(SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID WHERE Name = @Name AND Class = @Class INTERSECT " +
                             "SELECT DataID FROM Cookies JOIN UserIDs ON Cookies.UserID = UserIDs.UserID WHERE Cookie = @Cookie)";
             using(SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
             {
