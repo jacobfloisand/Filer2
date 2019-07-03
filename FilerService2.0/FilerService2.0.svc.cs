@@ -8,6 +8,8 @@ using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.ServiceModel.Web;
 using System.Text;
+using System.Collections;
+using System.Data.SqlTypes;
 
 namespace FilerService2._0
 {
@@ -205,9 +207,121 @@ namespace FilerService2._0
             return Query;
         }
 
-        public ResourceDataVerbose[] DoSearch(string Class, string Unit, string Type)
+        public ResourceDataVerbose[] DoSearch(string Class, string Unit, string Type, string Cookie)
         {
-            throw new NotImplementedException();
+            if(IsNullOrEmpty(Class) || IsNullOrEmpty(Cookie))
+            {
+                SetStatus(HttpStatusCode.Forbidden);
+                return null;
+            }
+            string Query = GetSearchQuery(Class, Unit, Type, Cookie);
+            using(SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+            {
+                com.Parameters.AddWithValue("@Cookie", Cookie);
+                com.Parameters.AddWithValue("@Class", Class);
+                if (!IsNullOrEmpty(Unit))
+                {
+                    com.Parameters.AddWithValue("@Unit", Unit);
+                }
+                else if (!IsNullOrEmpty(Type))
+                {
+                    com.Parameters.AddWithValue("@Type", Type);
+                }
+                using(SqlDataReader reader = com.ExecuteReader())
+                {
+                    List<ResourceDataVerbose> dataList = new List<ResourceDataVerbose>();
+                    if (reader.Read())
+                    {
+                        string webAddress = GetStringOrNull(reader, 5);
+                        string dataUnit = GetStringOrNull(reader, 2);
+                        string dataType = GetStringOrNull(reader, 3);
+                        string dataComments = GetStringOrNull(reader, 4);
+                        dataList.Add(new ResourceDataVerbose()
+                        {
+                            Name = reader.GetString(0),
+                            Date = reader.GetDateTime(1).ToString(),
+                            Unit = dataUnit,
+                            Type = dataType,
+                            Comments = dataComments,
+                            Link = webAddress
+                        });
+                        while (reader.Read())
+                        {
+                            webAddress = GetStringOrNull(reader, 5);
+                            dataUnit = GetStringOrNull(reader, 2);
+                            dataType = GetStringOrNull(reader, 3);
+                            dataComments = GetStringOrNull(reader, 4);
+                            dataList.Add(new ResourceDataVerbose()
+                            {
+                                Name = reader.GetString(0),
+                                Date = reader.GetDateTime(1).ToString(),
+                                Unit = dataUnit,
+                                Type = dataType,
+                                Comments = dataComments,
+                                Link = webAddress
+                            });
+                        }
+                        return dataList.ToArray();
+                    }
+                    else
+                    {
+                        SetStatus(HttpStatusCode.NoContent);
+                        return null;
+                    }
+                }
+            }
+        }
+
+        private static string GetStringOrNull(SqlDataReader reader, int ordinal)
+        {
+            try
+            {
+                return reader.GetString(ordinal);
+            }
+            catch (SqlNullValueException e)
+            {
+                return null;
+            }
+        }
+
+        private static string GetSearchQuery(string Class, string Unit, string Type, string Cookie)
+        {
+            string FileQuery = "SELECT Files.Name, Files.Date, Units.Unit, Types.Type, Comments.Comment, Links.Link FROM Files " +
+                            "LEFT JOIN Units ON Files.DataID = Units.DataID " +
+                            "JOIN Classes ON Classes.DataID = Files.DataID " +
+                            "LEFT JOIN Types ON Types.DataID = Files.DataID " +
+                            "LEFT JOIN Comments ON Comments.DataID = Files.DataID " +
+                            "JOIN UserIDs ON UserIDs.DataID = Files.DataID " +
+                            "JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                            "LEFT JOIN Links ON Files.DataID = Links.DataID " +
+                            "WHERE Cookies.Cookie = @Cookie AND Classes.Class = @Class ";
+            if (!IsNullOrEmpty(Unit))
+            {
+                FileQuery = FileQuery + "AND Units.Unit = @Unit ";
+            }
+            else if (!IsNullOrEmpty(Type))
+            {
+                FileQuery = FileQuery + "AND Types.Type = @Type ";
+            }
+            FileQuery = FileQuery + "Union ";
+
+            string LinkQuery = "SELECT Links.Name, Links.Date, Units.Unit, Types.Type, Comments.Comment, Links.Link FROM Links " +
+                                "LEFT JOIN Units ON Links.DataID = Units.DataID " +
+                                "JOIN Classes ON Classes.DataID = Links.DataID " +
+                                "LEFT JOIN Types ON Types.DataID = Links.DataID " +
+                                "LEFT JOIN Comments ON Comments.DataID = Links.DataID " +
+                                "JOIN UserIDs ON UserIDs.DataID = Links.DataID " +
+                                "JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                "WHERE Cookies.Cookie = @Cookie AND Classes.Class = @Class ";
+            if (!IsNullOrEmpty(Unit))
+            {
+                LinkQuery = LinkQuery + "AND Units.Unit = @Unit ";
+            }
+            else if (!IsNullOrEmpty(Type))
+            {
+                LinkQuery = LinkQuery + "AND Types.Type = @Type ";
+            }
+            return FileQuery + LinkQuery;
         }
 
         public FileContents GetFullFile(string Name, string Class, string Cookie)

@@ -33,6 +33,8 @@ namespace FilerService2._0
         public string Cookie { get; set; }
         [DataMember(EmitDefaultValue = false)]
         public string Comments { get; set; }
+        [DataMember(EmitDefaultValue = false)]
+        public string Link { get; set; }
     }
 
     /// <summary>

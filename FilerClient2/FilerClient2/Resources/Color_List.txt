@@ -1,0 +1,12 @@
+Textbooks 2.0 Color Palette - Square colors(light)
+
+Red - #ff9292
+Orange - #ffc17c
+Yellow - #fff57c
+Green - #a1ff6b
+Blue-green - #6bffb7
+Light Blue - #6bffff
+Dark Blue - #6b96ff
+Dark Purple - #ae6bff
+Light Purple - #dc6bff
+Pink - #ff6bb9

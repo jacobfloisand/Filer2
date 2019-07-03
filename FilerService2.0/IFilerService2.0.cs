@@ -21,7 +21,7 @@ namespace FilerService2._0
         [WebGet(UriTemplate = "/File?Name={Name}&Class={Class}&Cookie={Cookie}")]
         FileContents GetFullFile(String Name, String Class, String Cookie);
 
-        [WebGet(UriTemplate = "/Search?Class={Class}&Unit={Unit}&Type={Type}")]
-        ResourceDataVerbose[] DoSearch(String Class, String Unit, String Type);
+        [WebGet(UriTemplate = "/Search?Class={Class}&Unit={Unit}&Type={Type}&Cookie={Cookie}")]
+        ResourceDataVerbose[] DoSearch(String Class, String Unit, String Type, String Cookie);
     }
 }
