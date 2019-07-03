@@ -396,5 +396,46 @@ namespace FilerService2._0
                 }
             }
         }
+
+        public ClassName[] DoGetClasses(string Cookie)
+        {
+            if (IsNullOrEmpty(Cookie))
+            {
+                SetStatus(HttpStatusCode.Forbidden);
+                return null;
+            }
+            string Query = "SELECT Classes.Class FROM Classes JOIN userIDs ON Classes.DataID = userIDs.DataID " +
+                            "JOIN Cookies ON userIDs.UserID = Cookies.UserID " +
+                            "WHERE Cookies.Cookie = @Cookie GROUP BY Class ";
+            using(SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+            {
+                com.Parameters.AddWithValue("@Cookie", Cookie);
+                using(SqlDataReader reader = com.ExecuteReader())
+                {
+                    List<ClassName> dataList = new List<ClassName>();
+                    if (reader.Read())
+                    {
+                        dataList.Add(new ClassName()
+                        {
+                            Class = reader.GetString(0)
+                        });
+                        while (reader.Read())
+                        {
+                            dataList.Add(new ClassName()
+                            {
+                                Class = reader.GetString(0)
+                            });
+                        }
+                        SetStatus(HttpStatusCode.OK);
+                        return dataList.ToArray();
+                    }
+                    else
+                    {
+                        SetStatus(HttpStatusCode.NoContent);
+                        return null;
+                    }
+                }
+            }
+        }
     }
 }

@@ -23,5 +23,8 @@ namespace FilerService2._0
 
         [WebGet(UriTemplate = "/Search?Class={Class}&Unit={Unit}&Type={Type}&Cookie={Cookie}")]
         ResourceDataVerbose[] DoSearch(String Class, String Unit, String Type, String Cookie);
+
+        [WebGet(UriTemplate = "/Classes?Cookie={Cookie}")]
+        ClassName[] DoGetClasses(string Cookie);
     }
 }

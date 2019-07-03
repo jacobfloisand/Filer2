@@ -62,4 +62,14 @@ namespace FilerService2._0
         [DataMember(EmitDefaultValue = false)]
         public string File { get; set; }
     }
+
+    ///
+    ///This data model is used to send a list of classes back to the client.
+    ///
+    [DataContract]
+    public class ClassName
+    {
+        [DataMember(EmitDefaultValue = false)]
+        public string Class { get; set; }
+    }
 }
