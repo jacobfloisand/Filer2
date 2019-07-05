@@ -16,7 +16,9 @@ namespace FilerClient2
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainWindow());
+            FilerView2 GUI = new FilerView2();
+            FilerController2 c = new FilerController2(GUI);
+            Application.Run(new FilerView2());
         }
     }
 }
