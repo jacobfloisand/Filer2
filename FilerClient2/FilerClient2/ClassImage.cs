@@ -15,7 +15,7 @@ namespace FilerClient2
         Panel ImagePanel;
         string Text;
         string ResourcesPath = "";
-        public event Action<Object, EventArgs> Clicked;
+        public event Action<string> Clicked;
         Label TextBox;
         string[] ColorList = {"Dark_Purple_Book.png", "Pink_Book.png","Blue_Green_Book.png","Yellow_Book.png", "Red_Book.png","Light_Blue_Book.png","Orange_Book.png",
                                 "Light_Purple_Book.png","Green_Book.png","Dark_Blue_Book.png" };
@@ -53,7 +53,7 @@ namespace FilerClient2
 
         private void ImageClicked(Object o, EventArgs e)
         {
-            Clicked?.Invoke(this, e);
+            Clicked?.Invoke(TextBox.Text);
         }
     }
 }

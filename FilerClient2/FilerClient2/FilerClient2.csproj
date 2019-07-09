@@ -57,9 +57,12 @@
     <Compile Include="FilerView2.Designer.cs">
       <DependentUpon>FilerView2.cs</DependentUpon>
     </Compile>
+    <Compile Include="PagePanel.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResourceColor.cs" />
+    <Compile Include="ResourceData.cs" />
+    <Compile Include="ResourceImage.cs" />
     <EmbeddedResource Include="FilerView2.resx">
       <DependentUpon>FilerView2.cs</DependentUpon>
     </EmbeddedResource>

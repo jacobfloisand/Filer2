@@ -103,6 +103,7 @@ namespace FilerService2._0
                 }
                 com.ExecuteNonQuery(); //This query inserts the file or link information into the database.
             }
+            SetStatus(HttpStatusCode.Accepted);
         }
 
         public int AddFile(ResourceDataVerbose data)
