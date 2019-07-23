@@ -29,21 +29,26 @@ namespace FilerClient2
             //TextBox
             TextBox = new Label();
             TextBox.BackColor = Color.Transparent;
+            //TextBox.BackColor = Color.Purple;
             TextBox.Location = new Point(6, 7);
             TextBox.Size = new System.Drawing.Size(107, 90);
             TextBox.Text = Name;
             TextBox.TextAlign = ContentAlignment.MiddleCenter;
             ImagePanel.Controls.Add(TextBox);
             TextBox.Click += ImageClicked;
+            
             //Path
             ResourcesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources");
             ResourcesPath = Path.Combine(ResourcesPath, "Images");
             ResourcesPath = Path.Combine(ResourcesPath, "Book_Images");
+            
+           
             string BookColor = ColorList[(int)ClassColor];
             string PathToPicture = Path.Combine(ResourcesPath, BookColor);
             ImagePanel.BackgroundImage = System.Drawing.Image.FromFile(PathToPicture);
+            TextBox.BackColor = Color.Transparent;
+            ImagePanel.BackColor = Color.Transparent;
 
-            
         }
 
         public void AddTo(Panel parent)

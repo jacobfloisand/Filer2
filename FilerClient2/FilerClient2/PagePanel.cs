@@ -14,6 +14,8 @@ namespace FilerClient2
         TableLayoutPanel BasePanel;
         string[] ColorList = {"Dark_Purple_Square.png", "Pink_Square.png","Blue_Green_Square.png","Yellow_Square.png", "Red_Square.png","Light_Blue_Square.png","Orange_Square.png",
                                 "Light_Purple_Square.png","Green_Square.png","Dark_Blue_Square.png" };
+        public event Action<string> Delete_Clicked;
+        string Name = null;
         public PagePanel(string Name, string Date, string Type, bool IsLink, ResourceColor ResourceColor)
         {
             BasePanel = new TableLayoutPanel();
@@ -30,13 +32,14 @@ namespace FilerClient2
             this.BasePanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 10F));
             this.BasePanel.Size = new System.Drawing.Size(128, 128);
 
-
+            this.Name = Name;
             
             string ResourcesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources");
             ResourcesPath = Path.Combine(ResourcesPath, "Images");
             ResourcesPath = Path.Combine(ResourcesPath, "Square_Images");
             string SquarePath = Path.Combine(ResourcesPath, ColorList[(int)ResourceColor]);
             BasePanel.BackgroundImage = System.Drawing.Image.FromFile(SquarePath);
+            BasePanel.BackColor = Color.Transparent;
 
             if (IsLink)
             {
@@ -45,9 +48,14 @@ namespace FilerClient2
 
 
             //Add Delete Symbol
-            Panel DeletePanel = new Panel();
-            DeletePanel.BackColor = Color.Red;
+            PictureBox DeletePanel = new PictureBox();
+            string ExitPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources");
+            ExitPath = Path.Combine(ExitPath, "Images");
+            ExitPath = Path.Combine(ExitPath, "Delete_Symbol.png");
+            DeletePanel.ImageLocation = ExitPath;
+            DeletePanel.InitialImage = System.Drawing.Image.FromFile(ExitPath);
             BasePanel.Controls.Add(DeletePanel, 3, 0);
+            DeletePanel.Click += DeletePanel_Click;
 
             //Add Name Label
             Label NameLabel = new Label();
@@ -79,6 +87,12 @@ namespace FilerClient2
             TypeLabel.TextAlign = ContentAlignment.TopCenter;
         }
 
+        private void DeletePanel_Click(object sender, EventArgs e)
+        {
+            Console.WriteLine("Delete button clicked.");
+            Delete_Clicked?.Invoke(Name);
+        }
+
         public void AddLinkSymbol()
         {
             //Path
@@ -89,6 +103,11 @@ namespace FilerClient2
             LinkPanel.BackColor = Color.Transparent;
             LinkPanel.BackgroundImage = System.Drawing.Image.FromFile(LinkPath);
             BasePanel.Controls.Add(LinkPanel, 0, 0);
+        }
+
+        private void Delete_Click(object sender, EventArgs e)
+        {
+            //Delete_Clicked?.Invoke(Name);
         }
 
         public void AddTo(Panel Parent)

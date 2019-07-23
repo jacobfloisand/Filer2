@@ -22,6 +22,7 @@ namespace FilerClient2
             GetClassesAsync();
             GUI.ClassClick += ClassClicked;
             GUI.UploadEvent += UploadResource;
+            GUI.DeleteEvent += DoDelete;
         }
 
         private async void GetClassesAsync()
@@ -80,6 +81,7 @@ namespace FilerClient2
 
         private async void UploadResource(string Contents, string Name, string Unit, string Type, string IsLink, string Override, string Comments)
         {
+            Console.WriteLine("Uploading resource");
             dynamic Data = new ExpandoObject();
             Data.Contents = Contents;
             Data.Date = DateTime.Now.ToString("d");
@@ -94,12 +96,14 @@ namespace FilerClient2
 
             using (HttpClient Client = MakeClient())
             {
+                
                 StringContent Serialized = new StringContent(JsonConvert.SerializeObject(Data), Encoding.UTF8, "application/json");
                 HttpResponseMessage response = await Client.PostAsync("save", Serialized);
                 string SerializedResponse = response.Content.ReadAsStringAsync().Result;
                 dynamic DesearializedResponse = JsonConvert.DeserializeObject(SerializedResponse);
                 int StatusCode = (int)response.StatusCode;
-                if(StatusCode == 403)
+                Console.WriteLine("status is: " + StatusCode);
+                if (StatusCode == 403)
                 {
                     throw new Exception("Some of the fields were missing from the Upload request. Failed.");
                 }
@@ -107,11 +111,52 @@ namespace FilerClient2
                 {
                     throw new Exception("You already have afile saved under that name in that class. Choose a different name please.");
                 }
-                if(StatusCode == 201)
+                if(StatusCode == 202)
                 {
                     Console.WriteLine("File successfully saved on the server!");
+                    List<ResourceData> Uploaded = new List<ResourceData>();
+                    Uploaded.Add(new ResourceData()
+                    {
+                        Link = IsLink.Equals("true") ? Contents : null,
+                        Name = Name,
+                        Date = DateTime.Now.ToString("d"),
+                        Unit = Unit,
+                        Type = Type,
+                        Comments = Comments
+                    });
+                    GUI.UpdateResources(Uploaded);
                 }
+            }
+            
+        }
 
+        private async void DoDelete(string Name, string IsLink)
+        {
+            Console.WriteLine("Delete event has been called in controller");
+            dynamic Data = new ExpandoObject();
+            Data.Name = Name;
+            Data.Class = CurrentClass;
+            Data.Cookie = Cookie;
+            Data.IsLink = IsLink;
+            using (HttpClient Client = MakeClient())
+            {
+                StringContent Serialized = new StringContent(JsonConvert.SerializeObject(Data), Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await Client.PostAsync("delete", Serialized);
+                string SerializedResponse = response.Content.ReadAsStringAsync().Result;
+                dynamic DesearializedResponse = JsonConvert.DeserializeObject(SerializedResponse);
+                int StatusCode = (int)response.StatusCode;
+                if(StatusCode == 409)
+                {
+                    throw new Exception("File to delete was not found on server! Class: " + CurrentClass + " Name: " + Name);
+                }
+                if(StatusCode == 403)
+                {
+                    throw new Exception("One of the fields in Dodelete was Null. Oops.");
+                }
+                if(StatusCode == 200)
+                {
+                    Console.WriteLine("Successfully deleted an item!");
+                }
             }
         }
 
