@@ -15,6 +15,7 @@ namespace FilerClient2
         string[] ColorList = {"Dark_Purple_Square.png", "Pink_Square.png","Blue_Green_Square.png","Yellow_Square.png", "Red_Square.png","Light_Blue_Square.png","Orange_Square.png",
                                 "Light_Purple_Square.png","Green_Square.png","Dark_Blue_Square.png" };
         public event Action<string> Delete_Clicked;
+        public event Action<string> Double_Clicked;
         string Name = null;
         public PagePanel(string Name, string Date, string Type, bool IsLink, ResourceColor ResourceColor)
         {
@@ -40,6 +41,7 @@ namespace FilerClient2
             string SquarePath = Path.Combine(ResourcesPath, ColorList[(int)ResourceColor]);
             BasePanel.BackgroundImage = System.Drawing.Image.FromFile(SquarePath);
             BasePanel.BackColor = Color.Transparent;
+            BasePanel.DoubleClick += Double_Click;
 
             if (IsLink)
             {
@@ -65,6 +67,7 @@ namespace FilerClient2
             BasePanel.Controls.Add(NameLabel, 0, 1);
             BasePanel.SetColumnSpan(NameLabel, 5);
             NameLabel.TextAlign = ContentAlignment.MiddleCenter;
+            NameLabel.DoubleClick += Double_Click;
 
             //Add Date label
             Label DateLabel = new Label();
@@ -75,6 +78,7 @@ namespace FilerClient2
             BasePanel.Controls.Add(DateLabel, 0, 2);
             BasePanel.SetColumnSpan(DateLabel, 4);
             DateLabel.TextAlign = ContentAlignment.TopCenter;
+            DateLabel.DoubleClick += Double_Click;
 
             //Add Type label
             Label TypeLabel = new Label();
@@ -85,6 +89,7 @@ namespace FilerClient2
             BasePanel.Controls.Add(TypeLabel, 0, 3);
             BasePanel.SetColumnSpan(TypeLabel, 4);
             TypeLabel.TextAlign = ContentAlignment.TopCenter;
+            TypeLabel.DoubleClick += Double_Click;
         }
 
         private void DeletePanel_Click(object sender, EventArgs e)
@@ -113,6 +118,12 @@ namespace FilerClient2
         public void AddTo(Panel Parent)
         {
             Parent.Controls.Add(BasePanel);
+        }
+
+        private void Double_Click(object sender, EventArgs e)
+        {
+            Console.WriteLine("Double Click happened in the Page Panel");
+            Double_Clicked?.Invoke(Name);
         }
     }
 }

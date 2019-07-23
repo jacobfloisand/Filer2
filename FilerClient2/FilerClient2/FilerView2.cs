@@ -26,7 +26,7 @@ namespace FilerClient2
         public event Action<string> ClassClick; //Param: the class name that was clicked.
         public event Action<string, string, string, string, string, string, string> UploadEvent; //Params: Contents, Name, Unit, Type, IsLink, Override, Comments
         public event Action<string, string> DeleteEvent; //Name and IsLink.
-        public event Action<string> GetContentsEvent; //Params: Name? TODo not used yet.
+        public event Action<string> GetContentsEvent; //Params: Name
 
         private Thread MoveUpThread = null;
 
@@ -152,7 +152,7 @@ namespace FilerClient2
             Comments.Clear();
             ResourcesLeftPanel.Controls.Clear();
             ResourcesRightPanel.Controls.Clear();
-            Resources.Sort(new DateComparator());
+            CurrentResources.Sort(new DateComparator());
             Thread t = new Thread(() => UpdateResourcesHelper(CurrentResources));
             t.Start();
         }
@@ -171,6 +171,15 @@ namespace FilerClient2
                 MoveUpThread = null;
             }
             ResourcePanel.Invoke((AddResourcesDelegate)AddResourcesAfterWait, Resources, CurrentPage);
+        }
+
+        internal void ShowFile(string Contents, string Name)
+        {
+            string FilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"_Viewed_Files");
+            FilePath = Path.Combine(FilePath, Name);
+            byte[] ContentsAsBytes = Convert.FromBase64String(Contents);
+            File.WriteAllBytes(FilePath, ContentsAsBytes);
+            System.Diagnostics.Process.Start(FilePath);
         }
 
         /// <summary>
@@ -197,6 +206,7 @@ namespace FilerClient2
                 Comments.Add(Resources[i].Name, Resources[i].Comments);
                 current.AddTo(ResourcesLeftPanel);
                 current.Delete_Clicked += Received_Delete;
+                current.Double_Clicked += Received_Double_Click;
             }
 
             //Add to right page
@@ -210,6 +220,7 @@ namespace FilerClient2
                 Comments.Add(Resources[i].Name, Resources[i].Comments);
                 current.AddTo(ResourcesRightPanel);
                 current.Delete_Clicked += Received_Delete;
+                current.Double_Clicked += Received_Double_Click;
             }
         }
 
@@ -229,8 +240,30 @@ namespace FilerClient2
             }
             foreach(string s in fileList)
             {
-                string Contents = File.ReadAllText(s);
+                byte[] ContentsAsBytes = File.ReadAllBytes(s);
+                //Contents.PadRight(Contents.Length + (64 - Contents.Length % 64));
+                PadBytes(ContentsAsBytes);
+                string Contents = Convert.ToBase64String(ContentsAsBytes); //64 bit encoding works for all file types.
                 UploadEvent?.Invoke(Contents, Path.GetFileName(s), null, null, "false", "false", null); 
+            }
+        }
+
+        /// <summary>
+        /// Used to pad a byte array with zeros so that it can be 64bit encoded.
+        /// </summary>
+        /// <param name="Bytes"></param>
+        private void PadBytes(byte[] Bytes)
+        {
+            byte[] ByteCopy;
+            byte[] temp;
+            while(Bytes.Length % 64 != 0)
+            {
+                ByteCopy = new byte[Bytes.Length + 1];
+                Bytes.CopyTo(ByteCopy, 0);
+                ByteCopy[Bytes.Length] = 0x0;
+                temp = ByteCopy;
+                ByteCopy = Bytes;
+                Bytes = temp;
             }
         }
         /// <summary>
@@ -319,6 +352,12 @@ namespace FilerClient2
             //Here we will assume that the delete worked and remove it from the interface.
             CurrentResources.Remove(ToDelete);
             UpdateResources(new List<ResourceData>());
+        }
+
+        private void Received_Double_Click(string Name)
+        {
+            Console.WriteLine("Received double click in the view: " + Name);
+            GetContentsEvent?.Invoke(Name);
         }
     }
 

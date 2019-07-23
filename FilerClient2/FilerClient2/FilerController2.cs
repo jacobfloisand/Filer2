@@ -23,6 +23,7 @@ namespace FilerClient2
             GUI.ClassClick += ClassClicked;
             GUI.UploadEvent += UploadResource;
             GUI.DeleteEvent += DoDelete;
+            GUI.GetContentsEvent += DoGetFile;
         }
 
         private async void GetClassesAsync()
@@ -83,7 +84,7 @@ namespace FilerClient2
         {
             Console.WriteLine("Uploading resource");
             dynamic Data = new ExpandoObject();
-            Data.Contents = Contents;
+            Data.Contents = EncodeString(Contents);
             Data.Date = DateTime.Now.ToString("d");
             Data.Name = Name;
             Data.Class = CurrentClass;
@@ -130,6 +131,16 @@ namespace FilerClient2
             
         }
 
+        private string EncodeString(string Contents)
+        {
+            return Contents;
+        }
+
+        private string DecodeString(string Contents)
+        {
+            return Contents;
+        }
+
         private async void DoDelete(string Name, string IsLink)
         {
             Console.WriteLine("Delete event has been called in controller");
@@ -157,6 +168,18 @@ namespace FilerClient2
                 {
                     Console.WriteLine("Successfully deleted an item!");
                 }
+            }
+        }
+
+        private async void DoGetFile(string Name)
+        {
+            using (HttpClient client = MakeClient())
+            {
+                HttpResponseMessage response = await client.GetAsync("File?Name=" + Name + "&Class=" + CurrentClass + "&Cookie=" + Cookie);
+                string StringResponse = response.Content.ReadAsStringAsync().Result;
+                dynamic AsObj = JsonConvert.DeserializeObject(StringResponse);
+                string Contents = AsObj.File;
+                GUI.ShowFile(DecodeString(Contents), Name);
             }
         }
 
