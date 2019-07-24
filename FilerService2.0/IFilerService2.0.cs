@@ -26,5 +26,8 @@ namespace FilerService2._0
 
         [WebGet(UriTemplate = "/Classes?Cookie={Cookie}")]
         ClassName[] DoGetClasses(string Cookie);
+
+        [WebInvoke(Method = "POST", UriTemplate = "/update")]
+        void DoUpdate(ResourceDataVerbose[] Data);
     }
 }

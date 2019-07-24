@@ -438,5 +438,271 @@ namespace FilerService2._0
                 }
             }
         }
+
+        public void DoUpdate(ResourceDataVerbose[] Data)
+        {
+            ResourceDataVerbose Current = Data[0];
+            ResourceDataVerbose Updated = Data[1];
+
+            if (IsNullOrEmpty(Current.Name) || IsNullOrEmpty(Current.Class) || IsNullOrEmpty(Current.Cookie) || IsNullOrEmpty(Current.IsLink))
+            {
+                SetStatus(HttpStatusCode.Forbidden);
+                return;
+            }
+
+            if (!IsNullOrEmpty(Updated.Name))
+            {
+                //TODO Check for a conflict with the name change.
+                //Do query to update the name(this will always be an update query).
+                string Query = GetUpdateQueryForStrongType("Name", Current);
+                using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+                {
+                    com.Parameters.AddWithValue("@Name", Current.Name);
+                    com.Parameters.AddWithValue("@Class", Current.Class);
+                    com.Parameters.AddWithValue("@Cookie", Current.Cookie);
+                    com.Parameters.AddWithValue("@UpdatedName", Updated.Name);
+                    com.ExecuteNonQuery();
+                }
+            }
+            if (!IsNullOrEmpty(Updated.Class))
+            {
+                //Do query to update the class(this will always be an update query).
+                string Query = GetUpdateQueryForStrongType("Class", Current);
+                using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+                {
+                    com.Parameters.AddWithValue("@Name", Current.Name);
+                    com.Parameters.AddWithValue("@Class", Current.Class);
+                    com.Parameters.AddWithValue("@Cookie", Current.Cookie);
+                    com.Parameters.AddWithValue("@UpdatedClass", Updated.Class);
+                    com.ExecuteNonQuery();
+                }
+            }
+            if (!IsNullOrEmpty(Updated.Contents))
+            {
+                //do query to update the Contens(this will always be an updated query).
+                string Query = GetUpdateQueryForStrongType("Contents", Current);
+                using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+                {
+                    com.Parameters.AddWithValue("@Name", Current.Name);
+                    com.Parameters.AddWithValue("@Class", Current.Class);
+                    com.Parameters.AddWithValue("@Cookie", Current.Cookie);
+                    com.Parameters.AddWithValue("@UpdatedContents", Updated.Contents);
+                    com.ExecuteNonQuery();
+                }
+            }
+            //Updating the unit information.
+            if (IsNullOrEmpty(Updated.Unit))
+            {
+                //Perform a delete query for the unit(We don't need to worry about if it doesn't exits. If it does it will be deleted.
+                string Query = GetUpdateQueryForDeletingSoftAttribute("Unit", Current);
+                RunUpdateSQLForDeleteSoftAttribute(Query, Current);
+            }
+            else
+            {
+                //Using sql, do an if statement where if the row exists in the unit table, update it. Otherwise, create a row.
+                //TODO
+                
+            }
+            //Updating the Type information.
+            if (IsNullOrEmpty(Updated.Type))
+            {
+                //Perform a delete query for the type(We don't need to worry about if it doesn't exits. If it does it will be deleted.
+                string Query = GetUpdateQueryForDeletingSoftAttribute("Type", Current);
+                RunUpdateSQLForDeleteSoftAttribute(Query, Current);
+            }
+            else
+            {
+                //Using sql, do an if statement where if the row exits in the type table, update it. Otherwise, create a row.
+                //TODO
+            }
+            //Updating the Comments information.
+            if (IsNullOrEmpty(Updated.Comments))
+            {
+                //Perform a delete query for the Comments(We don't need to worry about if it doesn't exits. If it does it will be deleted.
+                string Query = GetUpdateQueryForDeletingSoftAttribute("Comments", Current);
+                RunUpdateSQLForDeleteSoftAttribute(Query, Current);
+            }
+            else
+            {
+                //Using sql, do an if statement where if the row exits in the Comments table, update it. Otherwise, create a row.
+                //TODO
+            }
+        }
+        /// <summary>
+        /// Generates an update query for Name, Contents, and Class. Thus ColumnName must be either Name, Contents, or Class.
+        /// </summary>
+        /// <param name="ColumnName"></param>
+        /// <param name="Data"></param>
+        /// <returns></returns>
+        private string GetUpdateQueryForStrongType(string ColumnName, ResourceDataVerbose Data)
+        {
+            if (ColumnName.Equals("Name"))
+            {
+                string Query = "";
+                if (Data.IsLink.Equals("true"))
+                {
+                    Query = "Declare @DID INT; " +
+                            "SET @DID = (SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
+                            "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                            "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                            "WHERE Cookies.Cookie = @Cookie); " +
+                            "UPDATE Links " +
+                            "SET Name = @UpdatedName " +
+                            "WHERE DataID = @DID ";
+                }
+                else
+                {
+                    Query = "Declare @DID INT; " +
+                            "SET @DID = (SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
+                            "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                            "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                            "WHERE Cookies.Cookie = @Cookie); " +
+                            "UPDATE Files " +
+                            "SET Name = @UpdatedName " +
+                            "WHERE DataID = @DID ";
+                }
+                return Query;
+            }
+            if (ColumnName.Equals("Contents"))
+            {
+                string Query = "";
+                if (Data.IsLink.Equals("true"))
+                {
+                    Query = "Declare @DID INT; " +
+                            "SET @DID = (SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
+                            "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                            "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                            "WHERE Cookies.Cookie = @Cookie); " +
+                            "UPDATE Links " +
+                            "SET Link = @UpdatedContents " +
+                            "WHERE DataID = @DID ";
+                }
+                else
+                {
+                    Query = "Declare @DID INT; " +
+                            "SET @DID = (SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
+                            "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                            "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                            "WHERE Cookies.Cookie = @Cookie); " +
+                            "UPDATE Files " +
+                            "SET Archive = @UpdatedContents " +
+                            "WHERE DataID = @DID ";
+                }
+                return Query;
+            }
+            if (ColumnName.Equals("Class"))
+            {
+                string Query = "";
+                if (Data.IsLink.Equals("true"))
+                {
+                    Query = "Declare @DID INT; " +
+                            "SET @DID = (SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
+                            "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                            "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                            "WHERE Cookies.Cookie = @Cookie); " +
+                            "UPDATE Classes " +
+                            "SET Class = @UpdatedClass " +
+                            "WHERE DataID = @DID ";
+                }
+                else
+                {
+                    Query = "Declare @DID INT; " +
+                            "SET @DID = (SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
+                            "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                            "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                            "WHERE Cookies.Cookie = @Cookie); " +
+                            "UPDATE Classes " +
+                            "SET Class = @UpdatedClass " +
+                            "WHERE DataID = @DID ";
+                }
+                return Query;
+            }
+            return null;
+        }
+
+        private string GetUpdateQueryForDeletingSoftAttribute(string ColumnName, ResourceDataVerbose Data)
+        {
+            if (ColumnName.Equals("Unit"))
+            {
+                string Query = "";
+                if (Data.IsLink.Equals("true"))
+                {
+                    Query = "Declare @DID INT; " +
+                "SET @DID = (SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
+                                                "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                                "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                                "WHERE Cookies.Cookie = @Cookie); " +
+                "DELETE FROM Units WHERE Units.DataID = @DID; ";
+                }
+                else
+                {
+                    Query = "Declare @DID INT; " +
+                "SET @DID = (SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
+                                                "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                                "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                                "WHERE Cookies.Cookie = @Cookie); " +
+                "DELETE FROM Units WHERE Units.DataID = @DID; ";
+                }
+                return Query;
+            }
+            if (ColumnName.Equals("Type"))
+            {
+                string Query = "";
+                if (Data.IsLink.Equals("true"))
+                {
+                    Query = "Declare @DID INT; " +
+                "SET @DID = (SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
+                                                "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                                "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                                "WHERE Cookies.Cookie = @Cookie); " +
+                "DELETE FROM Types WHERE Units.DataID = @DID; ";
+                }
+                else
+                {
+                    Query = "Declare @DID INT; " +
+                "SET @DID = (SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
+                                                "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                                "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                                "WHERE Cookies.Cookie = @Cookie); " +
+                "DELETE FROM Types WHERE Units.DataID = @DID; ";
+                }
+                return Query;
+            }
+            if (ColumnName.Equals("Comments"))
+            {
+                string Query = "";
+                if (Data.IsLink.Equals("true"))
+                {
+                    Query = "Declare @DID INT; " +
+                "SET @DID = (SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
+                                                "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                                "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                                "WHERE Cookies.Cookie = @Cookie); " +
+                "DELETE FROM Comments WHERE Units.DataID = @DID; ";
+                }
+                else
+                {
+                    Query = "Declare @DID INT; " +
+                "SET @DID = (SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
+                                                "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                                "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                                "WHERE Cookies.Cookie = @Cookie); " +
+                "DELETE FROM Comments WHERE Units.DataID = @DID; ";
+                }
+                return Query;
+            }
+            return null;
+        }
+
+        private void RunUpdateSQLForDeleteSoftAttribute(string Query, ResourceDataVerbose Data)
+        {
+            using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+            {
+                com.Parameters.AddWithValue("@Name", Data.Name);
+                com.Parameters.AddWithValue("@Class", Data.Class);
+                com.Parameters.AddWithValue("@Cookie", Data.Cookie);
+                com.ExecuteNonQuery();
+            }
+        }
     }
 }
