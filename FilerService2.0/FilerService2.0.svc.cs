@@ -452,7 +452,11 @@ namespace FilerService2._0
 
             if (!IsNullOrEmpty(Updated.Name))
             {
-                //TODO Check for a conflict with the name change.
+                if(NameIsTaken(Updated.Name, Current.Class, Current.Cookie, Current.IsLink))
+                {
+                    SetStatus(HttpStatusCode.Conflict);
+                    return;
+                }
                 //Do query to update the name(this will always be an update query).
                 string Query = GetUpdateQueryForStrongType("Name", Current);
                 using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
@@ -466,6 +470,11 @@ namespace FilerService2._0
             }
             if (!IsNullOrEmpty(Updated.Class))
             {
+                if(NameIsTaken(Current.Name, Updated.Class, Current.Cookie, Current.IsLink))
+                {
+                    SetStatus(HttpStatusCode.Conflict);
+                    return;
+                }
                 //Do query to update the class(this will always be an update query).
                 string Query = GetUpdateQueryForStrongType("Class", Current);
                 using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
@@ -500,7 +509,15 @@ namespace FilerService2._0
             else
             {
                 //Using sql, do an if statement where if the row exists in the unit table, update it. Otherwise, create a row.
-                //TODO
+                string Query = GetUpdateQueryForInsertingSoftAtt("Unit", Current);
+                using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+                {
+                    com.Parameters.AddWithValue("@Name", Current.Name);
+                    com.Parameters.AddWithValue("@Class", Current.Class);
+                    com.Parameters.AddWithValue("@Cookie", Current.Cookie);
+                    com.Parameters.AddWithValue("@UpdatedUnit", Updated.Unit);
+                    com.ExecuteNonQuery();
+                }
                 
             }
             //Updating the Type information.
@@ -513,7 +530,15 @@ namespace FilerService2._0
             else
             {
                 //Using sql, do an if statement where if the row exits in the type table, update it. Otherwise, create a row.
-                //TODO
+                string Query = GetUpdateQueryForInsertingSoftAtt("Unit", Current);
+                using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+                {
+                    com.Parameters.AddWithValue("@Name", Current.Name);
+                    com.Parameters.AddWithValue("@Class", Current.Class);
+                    com.Parameters.AddWithValue("@Cookie", Current.Cookie);
+                    com.Parameters.AddWithValue("@UpdatedType", Updated.Type);
+                    com.ExecuteNonQuery();
+                }
             }
             //Updating the Comments information.
             if (IsNullOrEmpty(Updated.Comments))
@@ -525,8 +550,18 @@ namespace FilerService2._0
             else
             {
                 //Using sql, do an if statement where if the row exits in the Comments table, update it. Otherwise, create a row.
-                //TODO
+                string Query = GetUpdateQueryForInsertingSoftAtt("Unit", Current);
+                using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+                {
+                    com.Parameters.AddWithValue("@Name", Current.Name);
+                    com.Parameters.AddWithValue("@Class", Current.Class);
+                    com.Parameters.AddWithValue("@Cookie", Current.Cookie);
+                    com.Parameters.AddWithValue("@UpdatedComments", Updated.Comments);
+                    com.ExecuteNonQuery();
+                }
             }
+            SetStatus(HttpStatusCode.OK);
+            return;
         }
         /// <summary>
         /// Generates an update query for Name, Contents, and Class. Thus ColumnName must be either Name, Contents, or Class.
@@ -702,6 +737,196 @@ namespace FilerService2._0
                 com.Parameters.AddWithValue("@Class", Data.Class);
                 com.Parameters.AddWithValue("@Cookie", Data.Cookie);
                 com.ExecuteNonQuery();
+            }
+        }
+
+        private string GetUpdateQueryForInsertingSoftAtt(string ColumnName, ResourceDataVerbose Data)
+        {
+            if (Data.IsLink.Equals("false"))
+            {
+                if (ColumnName.Equals("Unit"))
+                {
+
+                    string Query = "Declare @DID INT; " +
+                                    "SET @DID = (SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
+                                    "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                    "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                    "WHERE Cookies.Cookie = @Cookie); " +
+                                    " " +
+                                    "SELECT COUNT(*) FROM Units WHERE DataID = @DID AS C; " +
+                                    " " +
+                                    "IF c = 1 " +
+                                    "BEGIN " +
+                                    "    UPDATE Units " +
+                                    "    SET Unit = @UpdatedUnit " +
+                                    " " +
+                                    "    WHERE DataID = @DID " +
+                                    "END " +
+                                    "ELSE " +
+                                    "BEGIN " +
+                                    "    INSERT INTO Units VALUES(@DID, @UpdatedUnit) " +
+                                    "END ";
+                    return Query;
+                }
+                if (ColumnName.Equals("Type"))
+                {
+                    string Query = "Declare @DID INT; " +
+                                    "SET @DID = (SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
+                                    "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                    "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                    "WHERE Cookies.Cookie = @Cookie); " +
+                                    " " +
+                                    "SELECT COUNT(*) FROM Types WHERE DataID = @DID AS C; " +
+                                    " " +
+                                    "IF c = 1 " +
+                                    "BEGIN " +
+                                    "    UPDATE Types " +
+                                    "    SET Type = @UpdatedType " +
+                                    " " +
+                                    "    WHERE DataID = @DID " +
+                                    "END " +
+                                    "ELSE " +
+                                    "BEGIN " +
+                                    "    INSERT INTO Types VALUES(@DID, @UpdatedTypes) " +
+                                    "END ";
+                    return Query;
+                }
+                if (ColumnName.Equals("Comments"))
+                {
+                    string Query = "Declare @DID INT; " +
+                                    "SET @DID = (SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
+                                    "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                    "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                    "WHERE Cookies.Cookie = @Cookie); " +
+                                    " " +
+                                    "SELECT COUNT(*) FROM Comments WHERE DataID = @DID AS C; " +
+                                    " " +
+                                    "IF c = 1 " +
+                                    "BEGIN " +
+                                    "    UPDATE Comments " +
+                                    "    SET Comments = @UpdatedComments " +
+                                    " " +
+                                    "    WHERE DataID = @DID " +
+                                    "END " +
+                                    "ELSE " +
+                                    "BEGIN " +
+                                    "    INSERT INTO Comments VALUES(@DID, @UpdatedComments) " +
+                                    "END ";
+                    return Query;
+                }
+                return null;
+            }
+            else
+            {
+                if (ColumnName.Equals("Unit"))
+                {
+
+                    string Query = "Declare @DID INT; " +
+                                    "SET @DID = (SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
+                                    "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                    "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                    "WHERE Cookies.Cookie = @Cookie); " +
+                                    " " +
+                                    "SELECT COUNT(*) FROM Units WHERE DataID = @DID AS C; " +
+                                    " " +
+                                    "IF c = 1 " +
+                                    "BEGIN " +
+                                    "    UPDATE Units " +
+                                    "    SET Unit = @UpdatedUnit " +
+                                    " " +
+                                    "    WHERE DataID = @DID " +
+                                    "END " +
+                                    "ELSE " +
+                                    "BEGIN " +
+                                    "    INSERT INTO Units VALUES(@DID, @UpdatedUnit) " +
+                                    "END ";
+                    return Query;
+                }
+                if (ColumnName.Equals("Type"))
+                {
+                    string Query = "Declare @DID INT; " +
+                                    "SET @DID = (SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
+                                    "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                    "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                    "WHERE Cookies.Cookie = @Cookie); " +
+                                    " " +
+                                    "SELECT COUNT(*) FROM Types WHERE DataID = @DID AS C; " +
+                                    " " +
+                                    "IF c = 1 " +
+                                    "BEGIN " +
+                                    "    UPDATE Types " +
+                                    "    SET Type = @UpdatedType " +
+                                    " " +
+                                    "    WHERE DataID = @DID " +
+                                    "END " +
+                                    "ELSE " +
+                                    "BEGIN " +
+                                    "    INSERT INTO Types VALUES(@DID, @UpdatedTypes) " +
+                                    "END ";
+                    return Query;
+                }
+                if (ColumnName.Equals("Comments"))
+                {
+                    string Query = "Declare @DID INT; " +
+                                    "SET @DID = (SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
+                                    "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                    "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                    "WHERE Cookies.Cookie = @Cookie); " +
+                                    " " +
+                                    "SELECT COUNT(*) FROM Comments WHERE DataID = @DID AS C; " +
+                                    " " +
+                                    "IF c = 1 " +
+                                    "BEGIN " +
+                                    "    UPDATE Comments " +
+                                    "    SET Comments = @UpdatedComments " +
+                                    " " +
+                                    "    WHERE DataID = @DID " +
+                                    "END " +
+                                    "ELSE " +
+                                    "BEGIN " +
+                                    "    INSERT INTO Comments VALUES(@DID, @UpdatedComments) " +
+                                    "END ";
+                    return Query;
+                }
+                return null;
+            }
+        }
+
+        private bool NameIsTaken(string Name, string Class, string Cookie, string IsLink)
+        {
+            string Query = "";
+            if (IsLink.Equals("false"))
+            {
+                Query = "SELECT COUNT(*) FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
+                                "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                "WHERE Cookies.Cookie = @Cookie; ";                
+            }
+            else
+            {
+                Query = "SELECT COUNT(*) FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
+                                "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
+                                "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
+                                "WHERE Cookies.Cookie = @Cookie; ";
+            }
+            using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+            {
+                com.Parameters.AddWithValue("@Name", Name);
+                com.Parameters.AddWithValue("@Class", Class);
+                com.Parameters.AddWithValue("@Cookie", Cookie);
+                using (SqlDataReader Reader = com.ExecuteReader())
+                {
+                    Reader.Read();
+                    int Matches = Reader.GetInt32(0);
+                    if(Matches == 0)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
             }
         }
     }

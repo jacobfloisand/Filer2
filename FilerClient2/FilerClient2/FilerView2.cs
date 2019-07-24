@@ -207,6 +207,7 @@ namespace FilerClient2
                 current.AddTo(ResourcesLeftPanel);
                 current.Delete_Clicked += Received_Delete;
                 current.Double_Clicked += Received_Double_Click;
+                current.Right_Clicked += Received_Right_Click;
             }
 
             //Add to right page
@@ -221,6 +222,7 @@ namespace FilerClient2
                 current.AddTo(ResourcesRightPanel);
                 current.Delete_Clicked += Received_Delete;
                 current.Double_Clicked += Received_Double_Click;
+                current.Right_Clicked += Received_Right_Click;
             }
         }
 
@@ -359,7 +361,88 @@ namespace FilerClient2
             Console.WriteLine("Received double click in the view: " + Name);
             GetContentsEvent?.Invoke(Name);
         }
+
+        private void Received_Right_Click(string Name, Point MouseLocation) //MouseLocation is with respect to the ResourcePanel
+        {
+            ContextMenu ResourceContextMenu = GetContextMenu();
+            ResourceContextMenu.Show(ResourcePanel, MouseLocation);
+        }
+
+        private ContextMenu GetContextMenu()
+        {
+            ContextMenu Menu = new ContextMenu();
+            MenuItem UnitSubMenu = GetUnitSubMenu();
+            MenuItem TypeSubMenu = GetTypeSubMenu();
+            MenuItem CommentItem = new MenuItem("Add Comment");
+            MenuItem MoveToItem = new MenuItem("Move to...");
+            MenuItem RenameItem = new MenuItem("Rename...");
+            CommentItem.Click += MainMenuItemClick;
+            MoveToItem.Click += MainMenuItemClick;
+            RenameItem.Click += MainMenuItemClick;
+            Menu.MenuItems.Add(UnitSubMenu);
+            Menu.MenuItems.Add(TypeSubMenu);
+            Menu.MenuItems.Add(CommentItem);
+            Menu.MenuItems.Add(MoveToItem);
+            Menu.MenuItems.Add(RenameItem);
+            return Menu;
+        }
+
+        private MenuItem GetUnitSubMenu()
+        {
+            MenuItem UnitsMenu = new MenuItem("Unit");
+            ISet<string> UnitsSet = new HashSet<string>();
+            foreach(ResourceData R in CurrentResources)
+            {
+                UnitsSet.Add(R.Unit);
+            }
+            UnitsSet.Remove(null);
+            foreach(string S in UnitsSet)
+            {
+                MenuItem Current = new MenuItem(S);
+                Current.Click += UnitMenuItemClick;
+                UnitsMenu.MenuItems.Add(Current);
+            }
+            return UnitsMenu;
+        }
+
+        private MenuItem GetTypeSubMenu()
+        {
+            MenuItem TypesMenu = new MenuItem("Type");
+            ISet<string> TypesSet = new HashSet<string>();
+            foreach (ResourceData R in CurrentResources)
+            {
+                TypesSet.Add(R.Type);
+            }
+            TypesSet.Remove(null);
+            foreach (string S in TypesSet)
+            {
+                MenuItem Current = new MenuItem(S);
+                Current.Click += TypeMenuItemClick;
+                TypesMenu.MenuItems.Add(Current);
+            }
+            return TypesMenu;
+        }
+
+        private void UnitMenuItemClick(object sender, EventArgs e) //refering to the right click context menu for resources.
+        {
+            MenuItem Current = (MenuItem)sender;
+            Console.WriteLine("Unit was clicked! " + Current.Text);
+        }
+
+        private void TypeMenuItemClick(object sender, EventArgs e) //refering to the right click context menu for resources.
+        {
+            MenuItem Current = (MenuItem)sender;
+            Console.WriteLine("Type was clicked! " + Current.Text);
+        }
+
+        private void MainMenuItemClick(object sender, EventArgs e) //refering to the right click context menu for resources.
+        {
+            MenuItem Current = (MenuItem)sender;
+            Console.WriteLine("Menu item was clicked! " + Current.Text);
+        }
     }
+
+
 
     /// <summary>
     /// Used to compare items the ResourceData List. It is designed to put later dates first.

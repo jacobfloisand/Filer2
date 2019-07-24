@@ -16,6 +16,7 @@ namespace FilerClient2
                                 "Light_Purple_Square.png","Green_Square.png","Dark_Blue_Square.png" };
         public event Action<string> Delete_Clicked;
         public event Action<string> Double_Clicked;
+        public event Action<string, Point> Right_Clicked;
         string Name = null;
         public PagePanel(string Name, string Date, string Type, bool IsLink, ResourceColor ResourceColor)
         {
@@ -42,6 +43,7 @@ namespace FilerClient2
             BasePanel.BackgroundImage = System.Drawing.Image.FromFile(SquarePath);
             BasePanel.BackColor = Color.Transparent;
             BasePanel.DoubleClick += Double_Click;
+            BasePanel.Click += Right_Click;
 
             if (IsLink)
             {
@@ -68,6 +70,7 @@ namespace FilerClient2
             BasePanel.SetColumnSpan(NameLabel, 5);
             NameLabel.TextAlign = ContentAlignment.MiddleCenter;
             NameLabel.DoubleClick += Double_Click;
+            NameLabel.Click += Right_Click;
 
             //Add Date label
             Label DateLabel = new Label();
@@ -79,6 +82,7 @@ namespace FilerClient2
             BasePanel.SetColumnSpan(DateLabel, 4);
             DateLabel.TextAlign = ContentAlignment.TopCenter;
             DateLabel.DoubleClick += Double_Click;
+            DateLabel.Click += Right_Click;
 
             //Add Type label
             Label TypeLabel = new Label();
@@ -90,6 +94,7 @@ namespace FilerClient2
             BasePanel.SetColumnSpan(TypeLabel, 4);
             TypeLabel.TextAlign = ContentAlignment.TopCenter;
             TypeLabel.DoubleClick += Double_Click;
+            TypeLabel.Click += Right_Click;
         }
 
         private void DeletePanel_Click(object sender, EventArgs e)
@@ -124,6 +129,16 @@ namespace FilerClient2
         {
             Console.WriteLine("Double Click happened in the Page Panel");
             Double_Clicked?.Invoke(Name);
+        }
+
+        private void Right_Click(object sender, EventArgs e)
+        {
+            MouseEventArgs m = (MouseEventArgs)e;
+            if(m.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                Console.WriteLine("Right click happened in the page panel.");
+                Right_Clicked?.Invoke(Name, BasePanel.Parent.Parent.PointToClient(Cursor.Position));
+            }
         }
     }
 }
