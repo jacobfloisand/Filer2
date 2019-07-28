@@ -169,8 +169,8 @@
 
         private System.Windows.Forms.FlowLayoutPanel ClassesPanel;
         private System.Windows.Forms.Panel ResourcePanel;
-        private System.Windows.Forms.FlowLayoutPanel ResourcesRightPanel;
-        private System.Windows.Forms.FlowLayoutPanel ResourcesLeftPanel;
+        public System.Windows.Forms.FlowLayoutPanel ResourcesRightPanel;
+        public System.Windows.Forms.FlowLayoutPanel ResourcesLeftPanel;
         private System.Windows.Forms.Panel RibbonPanel;
         private System.Windows.Forms.Panel ArrowPanel;
         private System.Windows.Forms.PictureBox LoadingPanel;

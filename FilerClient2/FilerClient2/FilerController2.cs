@@ -24,6 +24,7 @@ namespace FilerClient2
             GUI.UploadEvent += UploadResource;
             GUI.DeleteEvent += DoDelete;
             GUI.GetContentsEvent += DoGetFile;
+            GUI.UpdateResourceEvent += DoUpdateResource;
         }
 
         private async void GetClassesAsync()
@@ -191,6 +192,63 @@ namespace FilerClient2
             }
 
             return s;
+        }
+
+        /// <summary>
+        /// Updates a resource. The caller of this function is expected to set the values of FierView2.TempOldResource and FilerView2.TempUpdatedResource.
+        /// </summary>
+        /// <param name="CurrentName"></param>
+        /// <param name="IsLink"></param>
+        /// <param name="UpdatedClass"></param>
+        /// <param name="UpdatedName"></param>
+        /// <param name="UpdatedContents"></param>
+        /// <param name="UpdatedUnit"></param>
+        /// <param name="UpdatedType"></param>
+        /// <param name="UpdatedComments"></param>
+        private async void DoUpdateResource(string CurrentName, string IsLink, string UpdatedClass, string UpdatedName, string UpdatedContents,
+                                            string UpdatedUnit, string UpdatedType, string UpdatedComments)
+        {
+            dynamic[] Data = new ExpandoObject[2];
+            Data[0] = new ExpandoObject();
+            Data[1] = new ExpandoObject();
+            Data[0].Class = CurrentClass;
+            Data[0].Name = CurrentName;
+            Data[0].Cookie = Cookie;
+            Data[0].IsLink = IsLink;
+
+            Data[1].Class = UpdatedClass;
+            Data[1].Name = UpdatedName;
+            Data[1].Contents = UpdatedContents;
+            Data[1].Unit = UpdatedUnit;
+            Data[1].Type = UpdatedType;
+            Data[1].Comments = UpdatedComments;
+
+            using (HttpClient Client = MakeClient())
+            {
+                StringContent Serialized = new StringContent(JsonConvert.SerializeObject(Data), Encoding.UTF8, "application/json");
+                HttpResponseMessage response = await Client.PostAsync("update", Serialized);
+                string SerializedResponse = response.Content.ReadAsStringAsync().Result;
+                dynamic DesearializedResponse = JsonConvert.DeserializeObject(SerializedResponse);
+                int StatusCode = (int)response.StatusCode;
+                if (StatusCode == 403)
+                {
+                    GUI.CurrentResources.Add(GUI.TempOldResource);
+                    throw new Exception("Something was null in the first object..");
+                }
+                if (StatusCode == 409)
+                {
+                    GUI.CurrentResources.Add(GUI.TempOldResource);
+                    throw new Exception("That name is already taken!");
+                }
+                if (StatusCode == 200)
+                {
+                    GUI.Comments.Clear();
+                    Console.WriteLine("Succesfully updated an item!");
+                    GUI.ResourcesLeftPanel.Controls.Clear();
+                    GUI.ResourcesRightPanel.Controls.Clear();
+                    GUI.UpdateResources(new List<ResourceData>() { GUI.TempUpdatedResource});
+                }
+            }
         }
     }
 }

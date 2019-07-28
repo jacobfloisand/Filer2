@@ -450,42 +450,7 @@ namespace FilerService2._0
                 return;
             }
 
-            if (!IsNullOrEmpty(Updated.Name))
-            {
-                if(NameIsTaken(Updated.Name, Current.Class, Current.Cookie, Current.IsLink))
-                {
-                    SetStatus(HttpStatusCode.Conflict);
-                    return;
-                }
-                //Do query to update the name(this will always be an update query).
-                string Query = GetUpdateQueryForStrongType("Name", Current);
-                using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
-                {
-                    com.Parameters.AddWithValue("@Name", Current.Name);
-                    com.Parameters.AddWithValue("@Class", Current.Class);
-                    com.Parameters.AddWithValue("@Cookie", Current.Cookie);
-                    com.Parameters.AddWithValue("@UpdatedName", Updated.Name);
-                    com.ExecuteNonQuery();
-                }
-            }
-            if (!IsNullOrEmpty(Updated.Class))
-            {
-                if(NameIsTaken(Current.Name, Updated.Class, Current.Cookie, Current.IsLink))
-                {
-                    SetStatus(HttpStatusCode.Conflict);
-                    return;
-                }
-                //Do query to update the class(this will always be an update query).
-                string Query = GetUpdateQueryForStrongType("Class", Current);
-                using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
-                {
-                    com.Parameters.AddWithValue("@Name", Current.Name);
-                    com.Parameters.AddWithValue("@Class", Current.Class);
-                    com.Parameters.AddWithValue("@Cookie", Current.Cookie);
-                    com.Parameters.AddWithValue("@UpdatedClass", Updated.Class);
-                    com.ExecuteNonQuery();
-                }
-            }
+           
             if (!IsNullOrEmpty(Updated.Contents))
             {
                 //do query to update the Contens(this will always be an updated query).
@@ -530,7 +495,7 @@ namespace FilerService2._0
             else
             {
                 //Using sql, do an if statement where if the row exits in the type table, update it. Otherwise, create a row.
-                string Query = GetUpdateQueryForInsertingSoftAtt("Unit", Current);
+                string Query = GetUpdateQueryForInsertingSoftAtt("Type", Current);
                 using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
                 {
                     com.Parameters.AddWithValue("@Name", Current.Name);
@@ -550,13 +515,49 @@ namespace FilerService2._0
             else
             {
                 //Using sql, do an if statement where if the row exits in the Comments table, update it. Otherwise, create a row.
-                string Query = GetUpdateQueryForInsertingSoftAtt("Unit", Current);
+                string Query = GetUpdateQueryForInsertingSoftAtt("Comments", Current);
                 using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
                 {
                     com.Parameters.AddWithValue("@Name", Current.Name);
                     com.Parameters.AddWithValue("@Class", Current.Class);
                     com.Parameters.AddWithValue("@Cookie", Current.Cookie);
                     com.Parameters.AddWithValue("@UpdatedComments", Updated.Comments);
+                    com.ExecuteNonQuery();
+                }
+            }
+            if (!IsNullOrEmpty(Updated.Name))
+            {
+                if (NameIsTaken(Updated.Name, Current.Class, Current.Cookie, Current.IsLink))
+                {
+                    SetStatus(HttpStatusCode.Conflict);
+                    return;
+                }
+                //Do query to update the name(this will always be an update query).
+                string Query = GetUpdateQueryForStrongType("Name", Current);
+                using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+                {
+                    com.Parameters.AddWithValue("@Name", Current.Name);
+                    com.Parameters.AddWithValue("@Class", Current.Class);
+                    com.Parameters.AddWithValue("@Cookie", Current.Cookie);
+                    com.Parameters.AddWithValue("@UpdatedName", Updated.Name);
+                    com.ExecuteNonQuery();
+                }
+            }
+            if (!IsNullOrEmpty(Updated.Class))
+            {
+                if (NameIsTaken(Current.Name, Updated.Class, Current.Cookie, Current.IsLink))
+                {
+                    SetStatus(HttpStatusCode.Conflict);
+                    return;
+                }
+                //Do query to update the class(this will always be an update query).
+                string Query = GetUpdateQueryForStrongType("Class", Current);
+                using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
+                {
+                    com.Parameters.AddWithValue("@Name", Current.Name);
+                    com.Parameters.AddWithValue("@Class", Current.Class);
+                    com.Parameters.AddWithValue("@Cookie", Current.Cookie);
+                    com.Parameters.AddWithValue("@UpdatedClass", Updated.Class);
                     com.ExecuteNonQuery();
                 }
             }
@@ -690,7 +691,7 @@ namespace FilerService2._0
                                                 "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
                                                 "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
                                                 "WHERE Cookies.Cookie = @Cookie); " +
-                "DELETE FROM Types WHERE Units.DataID = @DID; ";
+                "DELETE FROM Types WHERE Types.DataID = @DID; ";
                 }
                 else
                 {
@@ -699,7 +700,7 @@ namespace FilerService2._0
                                                 "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
                                                 "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
                                                 "WHERE Cookies.Cookie = @Cookie); " +
-                "DELETE FROM Types WHERE Units.DataID = @DID; ";
+                "DELETE FROM Types WHERE Types.DataID = @DID; ";
                 }
                 return Query;
             }
@@ -713,7 +714,7 @@ namespace FilerService2._0
                                                 "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
                                                 "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
                                                 "WHERE Cookies.Cookie = @Cookie); " +
-                "DELETE FROM Comments WHERE Units.DataID = @DID; ";
+                "DELETE FROM Comments WHERE Comments.DataID = @DID; ";
                 }
                 else
                 {
@@ -722,7 +723,7 @@ namespace FilerService2._0
                                                 "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
                                                 "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
                                                 "WHERE Cookies.Cookie = @Cookie); " +
-                "DELETE FROM Comments WHERE Units.DataID = @DID; ";
+                "DELETE FROM Comments WHERE Comments.DataID = @DID; ";
                 }
                 return Query;
             }
@@ -748,14 +749,15 @@ namespace FilerService2._0
                 {
 
                     string Query = "Declare @DID INT; " +
+                                    "Declare @C INT " +
                                     "SET @DID = (SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
                                     "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
                                     "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
                                     "WHERE Cookies.Cookie = @Cookie); " +
                                     " " +
-                                    "SELECT COUNT(*) FROM Units WHERE DataID = @DID AS C; " +
+                                    "SET @C = (SELECT COUNT(*) FROM Units WHERE DataID = @DID); " +
                                     " " +
-                                    "IF c = 1 " +
+                                    "IF @C = 1 " +
                                     "BEGIN " +
                                     "    UPDATE Units " +
                                     "    SET Unit = @UpdatedUnit " +
@@ -771,14 +773,15 @@ namespace FilerService2._0
                 if (ColumnName.Equals("Type"))
                 {
                     string Query = "Declare @DID INT; " +
+                                    "Declare @C INT " +
                                     "SET @DID = (SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
                                     "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
                                     "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
                                     "WHERE Cookies.Cookie = @Cookie); " +
                                     " " +
-                                    "SELECT COUNT(*) FROM Types WHERE DataID = @DID AS C; " +
+                                    "SET @C = (SELECT COUNT(*) FROM Types WHERE DataID = @DID); " +
                                     " " +
-                                    "IF c = 1 " +
+                                    "IF @C = 1 " +
                                     "BEGIN " +
                                     "    UPDATE Types " +
                                     "    SET Type = @UpdatedType " +
@@ -787,24 +790,25 @@ namespace FilerService2._0
                                     "END " +
                                     "ELSE " +
                                     "BEGIN " +
-                                    "    INSERT INTO Types VALUES(@DID, @UpdatedTypes) " +
+                                    "    INSERT INTO Types VALUES(@DID, @UpdatedType) " +
                                     "END ";
                     return Query;
                 }
                 if (ColumnName.Equals("Comments"))
                 {
                     string Query = "Declare @DID INT; " +
+                                    "Declare @C INT " +
                                     "SET @DID = (SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
                                     "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
                                     "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
                                     "WHERE Cookies.Cookie = @Cookie); " +
                                     " " +
-                                    "SELECT COUNT(*) FROM Comments WHERE DataID = @DID AS C; " +
+                                    "SET @C = (SELECT COUNT(*) FROM Comments WHERE DataID = @DID); " +
                                     " " +
-                                    "IF c = 1 " +
+                                    "IF @C = 1 " +
                                     "BEGIN " +
                                     "    UPDATE Comments " +
-                                    "    SET Comments = @UpdatedComments " +
+                                    "    SET Comment = @UpdatedComments " +
                                     " " +
                                     "    WHERE DataID = @DID " +
                                     "END " +
@@ -822,14 +826,15 @@ namespace FilerService2._0
                 {
 
                     string Query = "Declare @DID INT; " +
+                                    "Declare @C INT " +
                                     "SET @DID = (SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
                                     "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
                                     "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
                                     "WHERE Cookies.Cookie = @Cookie); " +
                                     " " +
-                                    "SELECT COUNT(*) FROM Units WHERE DataID = @DID AS C; " +
+                                    "SET @C = (SELECT COUNT(*) FROM Units WHERE DataID = @DID); " +
                                     " " +
-                                    "IF c = 1 " +
+                                    "IF @C = 1 " +
                                     "BEGIN " +
                                     "    UPDATE Units " +
                                     "    SET Unit = @UpdatedUnit " +
@@ -845,14 +850,15 @@ namespace FilerService2._0
                 if (ColumnName.Equals("Type"))
                 {
                     string Query = "Declare @DID INT; " +
+                                     "Declare @C INT " +
                                     "SET @DID = (SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
                                     "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
                                     "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
                                     "WHERE Cookies.Cookie = @Cookie); " +
                                     " " +
-                                    "SELECT COUNT(*) FROM Types WHERE DataID = @DID AS C; " +
+                                    "SET @C = (SELECT COUNT(*) FROM Types WHERE DataID = @DID); " +
                                     " " +
-                                    "IF c = 1 " +
+                                    "IF @C = 1 " +
                                     "BEGIN " +
                                     "    UPDATE Types " +
                                     "    SET Type = @UpdatedType " +
@@ -861,24 +867,25 @@ namespace FilerService2._0
                                     "END " +
                                     "ELSE " +
                                     "BEGIN " +
-                                    "    INSERT INTO Types VALUES(@DID, @UpdatedTypes) " +
+                                    "    INSERT INTO Types VALUES(@DID, @UpdatedType) " +
                                     "END ";
                     return Query;
                 }
                 if (ColumnName.Equals("Comments"))
                 {
                     string Query = "Declare @DID INT; " +
+                                     "Declare @C INT " +
                                     "SET @DID = (SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
                                     "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
                                     "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
                                     "WHERE Cookies.Cookie = @Cookie); " +
                                     " " +
-                                    "SELECT COUNT(*) FROM Comments WHERE DataID = @DID AS C; " +
+                                    "SET @C = (SELECT COUNT(*) FROM Comments WHERE DataID = @DID); " +
                                     " " +
-                                    "IF c = 1 " +
+                                    "IF @C = 1 " +
                                     "BEGIN " +
                                     "    UPDATE Comments " +
-                                    "    SET Comments = @UpdatedComments " +
+                                    "    SET Comment = @UpdatedComments " +
                                     " " +
                                     "    WHERE DataID = @DID " +
                                     "END " +
@@ -897,17 +904,17 @@ namespace FilerService2._0
             string Query = "";
             if (IsLink.Equals("false"))
             {
-                Query = "SELECT COUNT(*) FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
+                Query = "SELECT COUNT(*) FROM (SELECT Files.DataID FROM Files JOIN Classes ON Files.DataID = Classes.DataID " +
                                 "WHERE Files.Name = @Name AND Classes.Class = @Class INTERSECT " +
                                 "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
-                                "WHERE Cookies.Cookie = @Cookie; ";                
+                                "WHERE Cookies.Cookie = @Cookie) AS D";                
             }
             else
             {
-                Query = "SELECT COUNT(*) FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
+                Query = "SELECT COUNT(*) FROM (SELECT Links.DataID FROM Links JOIN Classes ON Links.DataID = Classes.DataID " +
                                 "WHERE Links.Name = @Name AND Classes.Class = @Class INTERSECT " +
                                 "SELECT UserIDs.DataID FROM UserIDs JOIN Cookies ON UserIDs.UserID = Cookies.UserID " +
-                                "WHERE Cookies.Cookie = @Cookie; ";
+                                "WHERE Cookies.Cookie = @Cookie) AS D ";
             }
             using (SqlCommand com = new SqlCommand(Query, FilerDB2Connection))
             {
