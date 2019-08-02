@@ -12,6 +12,9 @@ namespace FilerClient2
 {
     public partial class MultipurposePopup : Form
     {
+
+        bool IsInput = true;
+
         public MultipurposePopup()
         {
             InitializeComponent();
@@ -23,6 +26,7 @@ namespace FilerClient2
         public MultipurposePopup(string MainText, string DesiredInput, bool Input)
         {
             InitializeComponent();
+            IsInput = Input;
             if (Input)
             {
                 MainLabel.Text = MainText;
@@ -38,7 +42,7 @@ namespace FilerClient2
 
         private void AcceptButton_Click(object sender, EventArgs e)
         {
-            if (TextBox1.Text.Equals(""))
+            if (TextBox1.Text.Equals("") && IsInput)
             {
                 this.DialogResult = DialogResult.Cancel;
             }

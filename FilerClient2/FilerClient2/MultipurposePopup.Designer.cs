@@ -63,7 +63,8 @@
             // MainLabel
             // 
             this.MainLabel.AutoSize = true;
-            this.MainLabel.Location = new System.Drawing.Point(134, 25);
+            this.MainLabel.Location = new System.Drawing.Point(76, 21);
+            this.MainLabel.MaximumSize = new System.Drawing.Size(0, 50);
             this.MainLabel.Name = "MainLabel";
             this.MainLabel.Size = new System.Drawing.Size(0, 13);
             this.MainLabel.TabIndex = 3;

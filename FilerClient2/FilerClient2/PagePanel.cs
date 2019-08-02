@@ -12,8 +12,8 @@ namespace FilerClient2
     class PagePanel
     {
         TableLayoutPanel BasePanel;
-        string[] ColorList = {"Dark_Purple_Square.png", "Pink_Square.png","Blue_Green_Square.png","Yellow_Square.png", "Red_Square.png","Light_Blue_Square.png","Orange_Square.png",
-                                "Light_Purple_Square.png","Green_Square.png","Dark_Blue_Square.png" };
+        string[] ColorList = { "Blue_Green_Square.png", "Dark_Blue_Square.png", "Dark_Purple_Square.png", "Green_Square.png", "Light_Blue_Square.png",
+                                "Light_Purple_Square.png", "Orange_Square.png", "Pink_Square.png", "Red_Square.png", "Yellow_Square.png"};
         public event Action<string> Delete_Clicked;
         public event Action<string> Double_Clicked;
         public event Action<string, Point> Right_Clicked;

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -35,6 +36,12 @@ namespace FilerClient2
                 string StringResponse = response.Content.ReadAsStringAsync().Result;
                 dynamic AsObj = JsonConvert.DeserializeObject(StringResponse);
                 List<string> classes = new List<string>();
+                int Code = (int)response.StatusCode;
+                if(Code == 204)
+                {
+                    GUI.UpdateClasses(classes);
+                    return;
+                }
                 for(int i = 0; i < AsObj.Count; i++)
                 {
                     string cl = (string)AsObj[i].Class;
@@ -55,13 +62,21 @@ namespace FilerClient2
 
         private async void ClassClicked(string ClassName)
         {
+            Console.WriteLine("String name in Controller: " + AppDomain.GetCurrentThreadId());
             CurrentClass = ClassName;
             using (HttpClient client = MakeClient())
             {
-                HttpResponseMessage response = await client.GetAsync("Search?Class=" + ClassName + "&Cookie=" + Cookie);
+                HttpResponseMessage response = await client.GetAsync("Search?Class=" + WebUtility.UrlEncode(ClassName) + "&Cookie=" + Cookie);
                 string StringResponse = response.Content.ReadAsStringAsync().Result;
                 dynamic AsObj = JsonConvert.DeserializeObject(StringResponse);
+                int Status = (int)response.StatusCode;
                 List<ResourceData> Resources = new List<ResourceData>();
+                if (Status == 204)
+                {
+                    GUI.DeleteSempahore.Release();
+                    GUI.UpdateResources(Resources);
+                    return;
+                }
                 for (int i = 0; i < AsObj.Count; i++)
                 {
                     DateTime t = DateTime.Parse((string)AsObj[i].Date);
@@ -77,6 +92,7 @@ namespace FilerClient2
                     
                     Resources.Add(current);
                 }
+                GUI.DeleteSempahore.Release();
                 GUI.UpdateResources(Resources);
             }
         }
@@ -87,7 +103,7 @@ namespace FilerClient2
             dynamic Data = new ExpandoObject();
             Data.Contents = EncodeString(Contents);
             Data.Date = DateTime.Now.ToString("d");
-            Data.Name = Name;
+            Data.Name = Name.Substring(0, 49);
             Data.Class = CurrentClass;
             Data.Unit = NullIfEmpty(Unit);
             Data.Type = NullIfEmpty(Type);
@@ -168,6 +184,7 @@ namespace FilerClient2
                 if(StatusCode == 200)
                 {
                     Console.WriteLine("Successfully deleted an item!");
+                    GUI.DeleteSempahore.Release();
                 }
             }
         }
@@ -176,7 +193,7 @@ namespace FilerClient2
         {
             using (HttpClient client = MakeClient())
             {
-                HttpResponseMessage response = await client.GetAsync("File?Name=" + Name + "&Class=" + CurrentClass + "&Cookie=" + Cookie);
+                HttpResponseMessage response = await client.GetAsync("File?Name=" + Name + "&Class=" + WebUtility.UrlEncode(CurrentClass) + "&Cookie=" + Cookie);
                 string StringResponse = response.Content.ReadAsStringAsync().Result;
                 dynamic AsObj = JsonConvert.DeserializeObject(StringResponse);
                 string Contents = AsObj.File;

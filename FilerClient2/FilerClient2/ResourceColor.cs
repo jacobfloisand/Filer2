@@ -8,15 +8,15 @@ namespace FilerClient2
 {
     enum ResourceColor
     {
-        Dark_Purple = 0,
-        Pink,
-        Blue_Green,
-        Yellow,
-        Red,
-        Light_Blue,
-        Orange,
-        Light_Purple,
+        Blue_Green = 0,
+        Dark_Blue,
+        Dark_Purple,
         Green,
-        Dark_Blue
+        Light_Blue,
+        Light_Purple,
+        Orange,
+        Pink,
+        Red,
+        Yellow
     }
 }

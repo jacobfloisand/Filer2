@@ -13,18 +13,19 @@ namespace FilerClient2
     class ClassImage
     {
         Panel ImagePanel;
-        string Text;
+        string FullName;
         string ResourcesPath = "";
         public event Action<string> Clicked;
+        public event Action<string, Point> RightClicked;
         Label TextBox;
-        string[] ColorList = {"Dark_Purple_Book.png", "Pink_Book.png","Blue_Green_Book.png","Yellow_Book.png", "Red_Book.png","Light_Blue_Book.png","Orange_Book.png",
-                                "Light_Purple_Book.png","Green_Book.png","Dark_Blue_Book.png" };
+        string[] ColorList = { "Blue_Green_Book.png", "Dark_Blue_Book.png", "Dark_Purple_Book.png", "Green_Book.png", "Light_Blue_Book.png",
+                                "Light_Purple_Book.png", "Orange_Book.png", "Pink_Book.png", "Red_Book.png", "Yellow_Book.png"};
         public ClassImage(string Name, ResourceColor ClassColor)
         {
             //ImagePanel
             ImagePanel = new Panel();
             ImagePanel.Size = new System.Drawing.Size(128, 128);
-            Text = Name;
+            FullName = Name;
             ImagePanel.Click += ImageClicked;
             //TextBox
             TextBox = new Label();
@@ -32,7 +33,7 @@ namespace FilerClient2
             //TextBox.BackColor = Color.Purple;
             TextBox.Location = new Point(6, 7);
             TextBox.Size = new System.Drawing.Size(107, 90);
-            TextBox.Text = Name;
+            TextBox.Text = Name.Substring(0, Name.Length - 3);
             TextBox.TextAlign = ContentAlignment.MiddleCenter;
             ImagePanel.Controls.Add(TextBox);
             TextBox.Click += ImageClicked;
@@ -58,7 +59,15 @@ namespace FilerClient2
 
         private void ImageClicked(Object o, EventArgs e)
         {
-            Clicked?.Invoke(TextBox.Text);
+            MouseEventArgs m = (MouseEventArgs)e;
+            if (m.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                Clicked?.Invoke(FullName);
+            }
+            else if(m.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                RightClicked?.Invoke(FullName, ImagePanel.Parent.PointToClient(Cursor.Position));
+            }
         }
     }
 }

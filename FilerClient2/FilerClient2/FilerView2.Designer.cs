@@ -31,6 +31,8 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FilerView2));
             this.ClassesPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.ResourcePanel = new System.Windows.Forms.Panel();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.panel1 = new System.Windows.Forms.Panel();
             this.ResourcesRightPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.ResourcesLeftPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.RibbonPanel = new System.Windows.Forms.Panel();
@@ -39,6 +41,9 @@
             this.CurrentClassLabel = new System.Windows.Forms.Label();
             this.LoadingPanel = new System.Windows.Forms.PictureBox();
             this.ArrowPanel = new System.Windows.Forms.Panel();
+            this.AddFilePanel = new System.Windows.Forms.Panel();
+            this.AddLinkPanel = new System.Windows.Forms.Panel();
+            this.Copy_Right_Label = new System.Windows.Forms.Label();
             this.ResourcePanel.SuspendLayout();
             this.RibbonPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.LoadingPanel)).BeginInit();
@@ -57,6 +62,8 @@
             // ResourcePanel
             // 
             this.ResourcePanel.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("ResourcePanel.BackgroundImage")));
+            this.ResourcePanel.Controls.Add(this.panel2);
+            this.ResourcePanel.Controls.Add(this.panel1);
             this.ResourcePanel.Controls.Add(this.ResourcesRightPanel);
             this.ResourcePanel.Controls.Add(this.ResourcesLeftPanel);
             this.ResourcePanel.Location = new System.Drawing.Point(15, 30);
@@ -67,12 +74,34 @@
             this.ResourcePanel.DragDrop += new System.Windows.Forms.DragEventHandler(this.ResourcePanel_DragDrop);
             this.ResourcePanel.DragEnter += new System.Windows.Forms.DragEventHandler(this.ResourcePanel_DragEnter);
             // 
+            // panel2
+            // 
+            this.panel2.BackColor = System.Drawing.Color.Transparent;
+            this.panel2.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("panel2.BackgroundImage")));
+            this.panel2.Location = new System.Drawing.Point(1281, 611);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(41, 30);
+            this.panel2.TabIndex = 2;
+            this.panel2.Paint += new System.Windows.Forms.PaintEventHandler(this.panel2_Paint);
+            this.panel2.MouseClick += new System.Windows.Forms.MouseEventHandler(this.panel2_MouseClick);
+            // 
+            // panel1
+            // 
+            this.panel1.BackColor = System.Drawing.Color.Transparent;
+            this.panel1.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("panel1.BackgroundImage")));
+            this.panel1.Location = new System.Drawing.Point(3, 611);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(41, 30);
+            this.panel1.TabIndex = 1;
+            this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
+            this.panel1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseClick);
+            // 
             // ResourcesRightPanel
             // 
             this.ResourcesRightPanel.BackColor = System.Drawing.Color.Transparent;
-            this.ResourcesRightPanel.Location = new System.Drawing.Point(674, 24);
+            this.ResourcesRightPanel.Location = new System.Drawing.Point(723, 24);
             this.ResourcesRightPanel.Name = "ResourcesRightPanel";
-            this.ResourcesRightPanel.Size = new System.Drawing.Size(592, 599);
+            this.ResourcesRightPanel.Size = new System.Drawing.Size(543, 599);
             this.ResourcesRightPanel.TabIndex = 1;
             this.ResourcesRightPanel.DragDrop += new System.Windows.Forms.DragEventHandler(this.ResourcePanel_DragDrop);
             this.ResourcesRightPanel.DragEnter += new System.Windows.Forms.DragEventHandler(this.ResourcePanel_DragEnter);
@@ -112,7 +141,7 @@
             // 
             this.UnitTypeDropDown.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.UnitTypeDropDown.FormattingEnabled = true;
-            this.UnitTypeDropDown.Location = new System.Drawing.Point(767, 3);
+            this.UnitTypeDropDown.Location = new System.Drawing.Point(836, 3);
             this.UnitTypeDropDown.Name = "UnitTypeDropDown";
             this.UnitTypeDropDown.Size = new System.Drawing.Size(121, 30);
             this.UnitTypeDropDown.TabIndex = 3;
@@ -143,12 +172,46 @@
             this.ArrowPanel.TabIndex = 0;
             this.ArrowPanel.Click += new System.EventHandler(this.ArrowPanel_Click);
             // 
+            // AddFilePanel
+            // 
+            this.AddFilePanel.BackColor = System.Drawing.Color.Transparent;
+            this.AddFilePanel.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("AddFilePanel.BackgroundImage")));
+            this.AddFilePanel.Location = new System.Drawing.Point(304, 0);
+            this.AddFilePanel.Name = "AddFilePanel";
+            this.AddFilePanel.Size = new System.Drawing.Size(90, 30);
+            this.AddFilePanel.TabIndex = 5;
+            this.AddFilePanel.Paint += new System.Windows.Forms.PaintEventHandler(this.panel3_Paint);
+            this.AddFilePanel.MouseClick += new System.Windows.Forms.MouseEventHandler(this.panel3_MouseClick);
+            // 
+            // AddLinkPanel
+            // 
+            this.AddLinkPanel.BackColor = System.Drawing.Color.Transparent;
+            this.AddLinkPanel.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("AddLinkPanel.BackgroundImage")));
+            this.AddLinkPanel.Location = new System.Drawing.Point(400, 0);
+            this.AddLinkPanel.Name = "AddLinkPanel";
+            this.AddLinkPanel.Size = new System.Drawing.Size(90, 30);
+            this.AddLinkPanel.TabIndex = 6;
+            this.AddLinkPanel.MouseClick += new System.Windows.Forms.MouseEventHandler(this.panel4_MouseClick);
+            // 
+            // Copy_Right_Label
+            // 
+            this.Copy_Right_Label.AutoSize = true;
+            this.Copy_Right_Label.Font = new System.Drawing.Font("Palatino Linotype", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Copy_Right_Label.Location = new System.Drawing.Point(1150, 658);
+            this.Copy_Right_Label.Name = "Copy_Right_Label";
+            this.Copy_Right_Label.Size = new System.Drawing.Size(106, 16);
+            this.Copy_Right_Label.TabIndex = 7;
+            this.Copy_Right_Label.Text = "©Floisand Company";
+            // 
             // FilerView2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 22F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(1357, 675);
+            this.Controls.Add(this.Copy_Right_Label);
+            this.Controls.Add(this.AddFilePanel);
+            this.Controls.Add(this.AddLinkPanel);
             this.Controls.Add(this.RibbonPanel);
             this.Controls.Add(this.ResourcePanel);
             this.Controls.Add(this.ClassesPanel);
@@ -162,6 +225,7 @@
             this.RibbonPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.LoadingPanel)).EndInit();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -177,6 +241,11 @@
         private System.Windows.Forms.ComboBox UnitTypeDropDown;
         private System.Windows.Forms.Label CurrentClassLabel;
         private System.Windows.Forms.Label UserLabel;
+        private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Panel AddFilePanel;
+        private System.Windows.Forms.Panel AddLinkPanel;
+        private System.Windows.Forms.Label Copy_Right_Label;
     }
 }
 
